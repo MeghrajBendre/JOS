@@ -1,0 +1,2 @@
+Q.1>
+Nothing is required to be done when the environments are switched. When envs are switched, the EFLAGS are saved on the kernel stack in trapframe which are popped when older env is switched back.

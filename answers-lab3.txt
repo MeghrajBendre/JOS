@@ -1,0 +1,10 @@
+PART A: Answers
+---------------
+
+1. Individual handler function for each exception/interrupt are provided to separate user handler calls from kernel calls. It avoids user interference in kernel's call to certain exception/interrupt handlers. In simple words, it is just a protection mechanism implemented using individual function handler for each exception/interrupt.
+
+2. No changes were required to make user/softint program behave correctly. The priviledge level required by page fault handler is zero (DPL), which user dose not have. So, call to "int 14" generates a "general protection fault" which inturns triggers interrupt vector 13. 
+
+3. It works in this way to make sure that the user mode program has appropriate priviledges to trigger break point trap handler. Setting the DPL=3 gives user mode program priviledge to call breakpoint trap handler. DPL=0 will does not grant user mode program required priviledge and instead the general protection fault is triggered.
+
+4. This helps in avoiding calls by user mode to the exceptions and trap handlers which are meant to be called by the kernel. It is just a protection mechanism.

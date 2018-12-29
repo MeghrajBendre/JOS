@@ -1,0 +1,72 @@
+[1mdiff --git a/fs/fs.c b/fs/fs.c[m
+[1mindex 9279ac4..a3f03ad 100644[m
+[1m--- a/fs/fs.c[m
+[1m+++ b/fs/fs.c[m
+[36m@@ -62,9 +62,8 @@[m [malloc_block(void)[m
+ 	// super->s_nblocks blocks in the disk altogether.[m
+ [m
+ 	// LAB 5: Your code here.[m
+[31m-	//panic("alloc_block not implemented");[m
+ 	uint32_t blockno;[m
+[31m-	for(blockno = 1; blockno < super->s_nblocks; blockno++){[m
+[32m+[m	[32mfor(blockno = 0; blockno < super->s_nblocks; blockno++){[m
+ 		//blockno is free in the bitmap if set to 1[m
+ 		if( bitmap[blockno/32] & (1<<(blockno%32))){[m
+ 			bitmap[blockno/32] &= ~(1<<(blockno%32));[m
+[36m@@ -144,7 +143,28 @@[m [mstatic int[m
+ file_block_walk(struct File *f, uint32_t filebno, uint32_t **ppdiskbno, bool alloc)[m
+ {[m
+        // LAB 5: Your code here.[m
+[31m-       panic("file_block_walk not implemented");[m
+[32m+[m[32m       //panic("file_block_walk not implemented");[m
+[32m+[m	[32mif (filebno >= (NDIRECT + NINDIRECT))[m
+[32m+[m		[32mreturn -E_INVAL;[m
+[32m+[m	[32mint r;[m
+[32m+[m	[32m//direct block[m
+[32m+[m	[32mif(filebno < NDIRECT)[m
+[32m+[m		[32m*ppdiskbno = &f->f_direct[filebno];[m
+[32m+[m	[32melse {[m
+[32m+[m	[32m//indirect block[m
+[32m+[m	[32mif(f->f_indirect == 0){[m
+[32m+[m		[32mif(alloc == 0)[m
+[32m+[m			[32mreturn -E_NOT_FOUND;[m
+[32m+[m[41m		[m
+[32m+[m		[32mr = alloc_block();[m
+[32m+[m		[32mif(r < 0)[m
+[32m+[m			[32mreturn r;[m
+[32m+[m		[32mf->f_indirect = r;[m
+[32m+[m		[32m//clear block[m
+[32m+[m		[32mmemset(diskaddr(f->f_indirect), 0, BLKSIZE);[m
+[32m+[m	[32m}[m
+[32m+[m	[32m*ppdiskbno = (uint32_t *) diskaddr(f->f_indirect) + filebno - NDIRECT;[m
+[32m+[m[32m    }[m
+ }[m
+ [m
+ // Set *blk to the address in memory where the filebno'th[m
+[36m@@ -159,7 +179,25 @@[m [mint[m
+ file_get_block(struct File *f, uint32_t filebno, char **blk)[m
+ {[m
+        // LAB 5: Your code here.[m
+[31m-       panic("file_get_block not implemented");[m
+[32m+[m[32m       //panic("file_get_block not implemented");[m
+[32m+[m	[32mif (filebno >= (NDIRECT + NINDIRECT))[m
+[32m+[m[32m                return -E_INVAL;[m
+[32m+[m	[32mint r;[m
+[32m+[m	[32muint32_t *ppdiskbno;[m
+[32m+[m
+[32m+[m	[32mr = file_block_walk(f, filebno, &ppdiskbno, 1);[m
+[32m+[m	[32mif(r < 0)[m
+[32m+[m		[32mreturn r;[m
+[32m+[m
+[32m+[m	[32mif(!*ppdiskbno){[m
+[32m+[m		[32mr = alloc_block();[m
+[32m+[m		[32mif(r < 0)[m
+[32m+[m			[32mreturn r;[m
+[32m+[m		[32m*ppdiskbno = r;[m
+[32m+[m	[32m}[m
+[32m+[m	[32m*blk = diskaddr(*ppdiskbno);[m
+[32m+[m[41m    [m	[32mreturn 0;[m
+[32m+[m
+ }[m
+ [m
+ // Try to find a file named "name" in dir.  If so, set *file to it.[m

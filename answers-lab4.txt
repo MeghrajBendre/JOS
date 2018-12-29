@@ -1,0 +1,13 @@
+Question 1:
+MPBOOTPHYS is used to convert link address to load address. As kern/mpentry.S is compiled and linked to run above KERNBASE, it will fail since the AP runs in real mode after booting. boot/boot.s is compiled and linked in real mode at a specific address where it is loaded (0x7c00). So it does not need MPBOOTPHYS.
+#define MPBOOTPHYS(s) ((s) - mpentry_start + MPENTRY_PADDR)
+Here, the gdt i.e. s is loaded at address MPENTRY_PADDR i.e. 0x7000
+
+Question 2:
+If CPUs share the kernel stack, the hardware is still oblivious of the CPU holding the lock. So it is going to push registers on the stack in case of interrupt which can be simultaneous by multiple processor. This will result corruption on stack. Hence, even though the big kernel lock guarantees that only one CPU can run the kernel code at a time, we still need separate kernel stacks for each CPU.
+
+Question 3:
+The pointer e be dereferenced both before and after the addressing switch because it is statically mapped at higher address. So changing the page directory does not affect this mapping and e can be still dereferenced.
+
+Question 4:
+The old environment's registers are saved so that the environment can start running in the same state in which it was preempted when it is made runnable again. Inside the trap handler, a trapframe containg all the current registers is saved in curenv->env_tf. When the environment is ready to run again, the env_pop_tf() function pops all the saved registers and the environment continues its execution using the same register values.

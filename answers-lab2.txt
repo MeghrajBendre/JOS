@@ -1,0 +1,60 @@
+#Question 1
+
+	mystery_t x;
+	char* value = return_a_pointer();
+	*value = 10;
+	x = (mystery_t) value;
+
+Variable x should have uintptr_t as a pointer has a virtual address.
+
+
+#Question 2
+
+Entry	Base Virtual Address	Points to (logically):
+1023	?	                Page table for top 4MB of phys memory
+1022	?	                Page table second from top and 4MB of phys memory
+.	?	                ?
+960     0xf0000000              Page table for first 4MB pf phys memory
+959     0xefc00000              Page table for bootstack or kernel stack
+.       ?                       ?
+956     0xef000000              Page table for read only pages mapped by User
+.	?	                ?
+2	0x00800000	        Not mapped
+1	0x00400000	        Not mapped
+0	0x00000000	        [see next question]
+
+
+#Question 3
+User programs cannot read or write the kernel's memory because the permissions bit (PTE_W | PTE_U) is set for 
+Kernel virtual memory in page table. The mechanism used to protect kernel memory is page fault. When a user process
+tries to access kernel pages, the harwdware checks its permission bits and traps into kernel to generate
+a page fault.
+
+
+#Question 4
+Maximum amount of physical memory that this operating system can support is 256 MB since that the maximum amount of
+physical memory that can be mapped above KERNBASE
+
+
+#Question 5
+Overhead for managing maximum amount of memory i.e 256MB of memory:
+
+Page Directory                  :   4 KB
+Page Table                      :   4096 KB
+npages * sizeof(struct PageInfo):   512 KB
+---------------------------------------------
+Total Space Overhead            :   4612 KB
+
+
+#Question 6
+
+        # Now paging is enabled, but we're still running at a low EIP
+        # (why is this okay?).  Jump up above KERNBASE before entering
+        # C code.
+        mov     $relocated, %eax
+        jmp     *%eax
+
+We transition to running at an EIP above KERNBASE at "jmp *%eax" instruction.
+The fact that the virtual address [0,4MB) is mapped with the physical address [0,4MB) makes it possible for us to 
+continue executing at a low EIP between when we enable paging and when we begin running at an EIP above KERNBASE.
+Since the kernel has to be loaded at a high address, this transition is necessary!
